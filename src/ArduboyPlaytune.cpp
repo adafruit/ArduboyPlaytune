@@ -59,6 +59,7 @@ prevents a "stuttering" playback because of timing errors:
         ok with the 2013 version that used the 8-bit timer for score waits.
 */
 
+#if !defined(__SAMD51__)
 #include "ArduboyPlaytune.h"
 #include <avr/power.h>
 
@@ -401,3 +402,4 @@ ISR(TIMER3_COMPA_vect)
   }
 }
 
+#endif
