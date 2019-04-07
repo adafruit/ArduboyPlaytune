@@ -74,7 +74,13 @@ void Timer5Callback()
   if (duration > 0) {
     duration--;
     if (duration == 0) {
-      ArduboyPlaytune::step();  // execute commands
+      if (tone_playing) {
+	sine1.amplitude(0);
+	sine2.amplitude(0);
+      }
+      if (tune_playing) {
+	ArduboyPlaytune::step();  // execute commands
+      }
     }
   }
 }
@@ -220,9 +226,10 @@ void ArduboyPlaytune::tone(unsigned int frequency, unsigned long tone_duration)
   // don't output the tone if sound is muted or
   // the tone channel isn't initialised
   if (!outputEnabled() || _tune_num_chans < 2) {
+    Serial.println("muted");
     return;
   }
-
+  Serial.print("Play tone: "); Serial.println(frequency);
   tone_playing = true;
   mute_score = tone_mutes_score;
 
