@@ -14,6 +14,8 @@
 
 #define SPEAKER_ENABLE  51
 extern AudioSynthWaveformSine   sine1, sine2;
+static volatile boolean playing_chan0=false, playing_chan1=false;
+
 static byte _tune_num_chans = 0;
 static volatile boolean tune_playing = false; // is the score still playing?
 static volatile unsigned wait_timer_frequency2;       /* its current frequency */
@@ -77,6 +79,8 @@ void Timer5Callback()
       if (tone_playing) {
 	sine1.amplitude(0);
 	sine2.amplitude(0);
+	playing_chan0 = playing_chan1 = false;
+	digitalWrite(SPEAKER_ENABLE, LOW);
       }
       if (tune_playing) {
 	ArduboyPlaytune::step();  // execute commands
@@ -97,7 +101,7 @@ void ArduboyPlaytune::initChannel(byte pin)
 {
   AudioMemory(2);
   _tune_num_chans = 2;
-  digitalWrite(SPEAKER_ENABLE, HIGH);
+  digitalWrite(SPEAKER_ENABLE, LOW);
   pinMode(LED_BUILTIN, OUTPUT);   // Onboard LED can be used for precise
   digitalWrite(LED_BUILTIN, LOW); // benchmarking with an oscilloscope
   zt5.configure(TC_CLOCK_PRESCALER_DIV1, // prescaler
@@ -133,22 +137,36 @@ void ArduboyPlaytune::playNote(byte chan, byte note)
   if (chan == 0) {
     sine1.amplitude(0.5);
     sine1.frequency(freq);
+    playing_chan0 = true;
   } 
   if (chan == 1) {
     sine2.amplitude(0.5);
     sine2.frequency(freq);
+    playing_chan1 = true;
   } 
+  if (playing_chan0 || playing_chan1) {
+    digitalWrite(SPEAKER_ENABLE, HIGH);
+  } else {
+    digitalWrite(SPEAKER_ENABLE, LOW);
+  }
 }
 
 void ArduboyPlaytune::stopNote(byte chan)
 {
   Serial.print("Stop channel "); Serial.println(chan);
-    if (chan == 0) {
+  if (chan == 0) {
     sine1.amplitude(0);
+    playing_chan0 = false;
   } 
   if (chan == 1) {
     sine2.amplitude(0);
+    playing_chan1 = false;
   } 
+  if (playing_chan0 || playing_chan1) {
+    digitalWrite(SPEAKER_ENABLE, HIGH);
+  } else {
+    digitalWrite(SPEAKER_ENABLE, LOW);
+  }
 }
 
 void ArduboyPlaytune::playScore(const byte *score)
@@ -235,8 +253,15 @@ void ArduboyPlaytune::tone(unsigned int frequency, unsigned long tone_duration)
 
   sine2.amplitude(0);
   sine1.amplitude(0.5);
+  playing_chan0 = true;
+  playing_chan1 = false;
   sine1.frequency(frequency);
   duration = tone_duration;
+  if (playing_chan0 || playing_chan1) {
+    digitalWrite(SPEAKER_ENABLE, HIGH);
+  } else {
+    digitalWrite(SPEAKER_ENABLE, LOW);
+  }
 }
 
 void ArduboyPlaytune::toneMutesScore(boolean mute)
