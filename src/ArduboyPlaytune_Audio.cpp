@@ -10,9 +10,8 @@
 #include "ArduboyPlaytune.h"
 #include <Audio.h>
 #include "Adafruit_ZeroTimer.h"
+#include <Adafruit_Arcada.h>
 
-
-#define SPEAKER_ENABLE  51
 extern AudioSynthWaveformSine   sine1, sine2;
 static volatile boolean playing_chan0=false, playing_chan1=false;
 
@@ -80,7 +79,7 @@ void Timer5Callback()
 	sine1.amplitude(0);
 	sine2.amplitude(0);
 	playing_chan0 = playing_chan1 = false;
-	digitalWrite(SPEAKER_ENABLE, LOW);
+	digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
       }
       if (tune_playing) {
 	ArduboyPlaytune::step();  // execute commands
@@ -101,7 +100,7 @@ void ArduboyPlaytune::initChannel(byte pin)
 {
   AudioMemory(2);
   _tune_num_chans = 2;
-  digitalWrite(SPEAKER_ENABLE, LOW);
+  digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
   pinMode(LED_BUILTIN, OUTPUT);   // Onboard LED can be used for precise
   digitalWrite(LED_BUILTIN, LOW); // benchmarking with an oscilloscope
   zt5.configure(TC_CLOCK_PRESCALER_DIV1, // prescaler
@@ -145,9 +144,9 @@ void ArduboyPlaytune::playNote(byte chan, byte note)
     playing_chan1 = true;
   } 
   if (playing_chan0 || playing_chan1) {
-    digitalWrite(SPEAKER_ENABLE, HIGH);
+    digitalWrite(ARCADA_SPEAKER_ENABLE, HIGH);
   } else {
-    digitalWrite(SPEAKER_ENABLE, LOW);
+    digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
   }
 }
 
@@ -163,9 +162,9 @@ void ArduboyPlaytune::stopNote(byte chan)
     playing_chan1 = false;
   } 
   if (playing_chan0 || playing_chan1) {
-    digitalWrite(SPEAKER_ENABLE, HIGH);
+    digitalWrite(ARCADA_SPEAKER_ENABLE, HIGH);
   } else {
-    digitalWrite(SPEAKER_ENABLE, LOW);
+    digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
   }
 }
 
@@ -258,9 +257,9 @@ void ArduboyPlaytune::tone(unsigned int frequency, unsigned long tone_duration)
   sine1.frequency(frequency);
   duration = tone_duration;
   if (playing_chan0 || playing_chan1) {
-    digitalWrite(SPEAKER_ENABLE, HIGH);
+    digitalWrite(ARCADA_SPEAKER_ENABLE, HIGH);
   } else {
-    digitalWrite(SPEAKER_ENABLE, LOW);
+    digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
   }
 }
 
