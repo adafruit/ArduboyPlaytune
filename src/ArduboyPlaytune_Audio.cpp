@@ -9,10 +9,10 @@
 
 #include "ArduboyPlaytune.h"
 #include <Audio.h>
-#include "Adafruit_ZeroTimer.h"
 #include <Adafruit_Arcada.h>
 
 extern AudioSynthWaveformSine   sine1, sine2;
+extern Adafruit_Arcada arcada;
 static volatile boolean playing_chan0=false, playing_chan1=false;
 
 static byte _tune_num_chans = 0;
@@ -53,16 +53,9 @@ const unsigned int _midi_word_note_frequencies[80] PROGMEM = {
 };
 
 
-
-Adafruit_ZeroTimer zt5 = Adafruit_ZeroTimer(5);
-#define CALLBACK_FREQ    1000  // 1ms
-
-void TC5_Handler(){
-  Adafruit_ZeroTimer::timerHandler(5);
-}
 volatile int32_t duration = 0;
 volatile int32_t second = 0;
-void Timer5Callback()
+void TimerCallback()
 {
   /*
   if (second == 0) {
@@ -79,7 +72,7 @@ void Timer5Callback()
 	sine1.amplitude(0);
 	sine2.amplitude(0);
 	playing_chan0 = playing_chan1 = false;
-	digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
+	arcada.enableSpeaker(false);
       }
       if (tune_playing) {
 	ArduboyPlaytune::step();  // execute commands
@@ -100,17 +93,10 @@ void ArduboyPlaytune::initChannel(byte pin)
 {
   AudioMemory(2);
   _tune_num_chans = 2;
-  digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
+  arcada.enableSpeaker(false);
   pinMode(LED_BUILTIN, OUTPUT);   // Onboard LED can be used for precise
   digitalWrite(LED_BUILTIN, LOW); // benchmarking with an oscilloscope
-  zt5.configure(TC_CLOCK_PRESCALER_DIV1, // prescaler
-                TC_COUNTER_SIZE_16BIT,   // bit width of timer/counter
-                TC_WAVE_GENERATION_MATCH_PWM // frequency or PWM mode
-                );
-
-  zt5.setCompare(0, 48000000/CALLBACK_FREQ);
-  zt5.setCallback(true, TC_CALLBACK_CC_CHANNEL0, Timer5Callback);  // this one sets pin low
-  zt5.enable(true);
+  arcada.timerCallback(1000, TimerCallback);
 }
 
 void ArduboyPlaytune::playNote(byte chan, byte note)
@@ -134,19 +120,19 @@ void ArduboyPlaytune::playNote(byte chan, byte note)
   Serial.print(" = freq "); Serial.print(freq); Serial.print(" on channel "); Serial.println(chan);
   
   if (chan == 0) {
-    sine1.amplitude(0.5);
+    sine1.amplitude(ARCADA_MAX_VOLUME);
     sine1.frequency(freq);
     playing_chan0 = true;
   } 
   if (chan == 1) {
-    sine2.amplitude(0.5);
+    sine2.amplitude(ARCADA_MAX_VOLUME);
     sine2.frequency(freq);
     playing_chan1 = true;
   } 
   if (playing_chan0 || playing_chan1) {
-    digitalWrite(ARCADA_SPEAKER_ENABLE, HIGH);
+    arcada.enableSpeaker(true);
   } else {
-    digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
+    arcada.enableSpeaker(false);
   }
 }
 
@@ -162,9 +148,9 @@ void ArduboyPlaytune::stopNote(byte chan)
     playing_chan1 = false;
   } 
   if (playing_chan0 || playing_chan1) {
-    digitalWrite(ARCADA_SPEAKER_ENABLE, HIGH);
+    arcada.enableSpeaker(true);
   } else {
-    digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
+    arcada.enableSpeaker(false);
   }
 }
 
@@ -251,15 +237,15 @@ void ArduboyPlaytune::tone(unsigned int frequency, unsigned long tone_duration)
   mute_score = tone_mutes_score;
 
   sine2.amplitude(0);
-  sine1.amplitude(0.5);
+  sine1.amplitude(ARCADA_MAX_VOLUME);
   playing_chan0 = true;
   playing_chan1 = false;
   sine1.frequency(frequency);
   duration = tone_duration;
   if (playing_chan0 || playing_chan1) {
-    digitalWrite(ARCADA_SPEAKER_ENABLE, HIGH);
+    arcada.enableSpeaker(true);
   } else {
-    digitalWrite(ARCADA_SPEAKER_ENABLE, LOW);
+    arcada.enableSpeaker(false);
   }
 }
 
