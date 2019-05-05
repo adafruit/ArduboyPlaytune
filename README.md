@@ -1,4 +1,6 @@
-# ArduboyPlaytune
+# ArduboyPlaytune for Arcada
+
+**This is a port of ArduboyPlaytune for Arcada boards such as PyBadge and PyGamer**
 
 The ArduboyPlaytune library is maintained in a git repository hosted on [GitHub](https://github.com/) at:
 
